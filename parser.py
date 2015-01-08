@@ -14,6 +14,15 @@ class findRULES:
 		for rule in RULES[1:]:
 	        	if left == rule[0]:
 				self.candidate.append(RULES.index(rule))
+
+class findRIGHT:
+        def __init__(self, left):
+                self.candidate=[]
+                for rule in RULES[1:]:
+			cut=CUT(RULES,rule)
+                        if left in cut.right:
+                                self.candidate.append(RULES.index(rule))
+
 class BT:
 	def __init__(self, left, right, cn, OL, number):
         	self.left = left
@@ -23,13 +32,11 @@ class BT:
 		self.cn=cn
 
 	def first(self, left, right, cn, OL, number):
-
 		L=1
 		for item in right:
 			if item in UT:
 				L=L*LUT[UT.index(item)]
 			if(item in T4):
-				L=0
 				if Table[UT.index(OL)][T4.index(item)]==0:
 					print("Origin LEFT:", OL, "ITEM", item, "NO.", number, "left", left, "cn", cn)
 					Table[UT.index(OL)][T4.index(item)]=number
@@ -40,68 +47,42 @@ class BT:
 			elif(item in UT):
 				tmp=findRULES(item)
 				for can in tmp.candidate:
-					newcut=CUT(RULES,RULES[can])
+			       		newcut=CUT(RULES,RULES[can])
 					newbt=BT(newcut.left, newcut.right, can, OL, number)
-					print("FIRST~~")
 					newbt.first(newcut.left, newcut.right, can, OL, number) 			
 			else:
 				print("The input string does not match any token.\n")
-		if L==1:
+		if L==1 and left not in right :
 			LR[cn]=1
 
-	def follow(self, left, right, OL, number):
-		print(self.empty)
-		print(Table)
-		if self.empty==1:
-	                for r in range(1,len(RULES)-1):
-			        cut=CUT(RULES,RULES[r])
-        	                if left in cut.right:
-					print(left,RULES[r],cut.left)
-					if cut.right[len(cut.right)-1]==left:
-						tmp=findRULES(cut.left)
-                                                for can in tmp.candidate:
-                                                      	print("AAA",RULES[can])
-							newcut=CUT(RULES,RULES[can])
-                                                       	newbt=BT(newcut.left, newcut.right, OL, can)
-                                                       	E=newbt.first(newcut.left, newcut.right, OL, number)
-	                                               	print("Follow 1")
-							if E==0:
-								print("back")
+	def follow(self, left, cn, OL, number):
+		if LR[cn]==1:
+			tmp=findRIGHT(left)
+			for can in tmp.candidate:
+	                        newcut=CUT(RULES,RULES[can])
+				newbt=BT(newcut.left, newcut.right, can, OL, number)
+				print("LEFT:",left,"CAN",can,"NO.",number,"R",newcut.right)
+				print(LR[1:])
+				if newcut.right[len(newcut.right)-1]==left:
+					print("GET")
+					newbt.follow(newcut.left, can, OL, number)
+				for s in range(newcut.right.index(left),len(newcut.right)):
+					print("S:",s,"NOW",newcut.right[s],"INDEX",newcut.right.index(left))
+					if newcut.right[s] in UT and newcut.right[s] != left:
+						if LR[can]==1 :
+							print("Follow 1")
+							newbt.first(newcut.left, newcut.right[s:], can, OL, number)
+							if can != cn:
+								newbt.follow(newcut.left, can, OL, number)
 							
-							elif len(cut.right)-2>=0:
-		                                                tmp=findRULES(cut.left)
-		                                                for can in tmp.candidate:
-                		                                        newcut=CUT(RULES,RULES[can])
-                                		                        newbt=BT(newcut.left, newcut.right, OL, can)
-                                                		        E=newbt.first(newcut.left, newcut.right, OL, number)
-                                                       			print("Follow 2")
-							else:
-								print("Follow 3")
-								newbt.follow(newcut.left, newcut.right, OL, number)
-					elif cut.right[cut.right.index(left)+1] in T4:
-						Table[UT.index(OL)][T4.index(cut.right[cut.right.index(left)+1])]=number
-
-					elif cut.right.index(left)>=0 and cut.right[cut.right.index(left)+1] in UT:
-						tmp=findRULES(cut.right[cut.right.index(left)+1])
-                                                for can in tmp.candidate:
-                                                        newcut=CUT(RULES,RULES[can])
-							print("BBB",RULES[can])
-                                                        newbt=BT(newcut.left, newcut.right, OL, can)
-                                                        E=newbt.first(newcut.left, newcut.right, OL, number)
-                                                        print("Follow 4")
-                                                        if E==0:
-                                                                print("BACK")
-
-                                                        elif len(cut.right)-2>=0:
-                                                                tmp=findRULES(cut.left)
-                                                                for can in tmp.candidate:
-                                                                        newcut=CUT(RULES,RULES[can])
-                                                                        newbt=BT(newcut.left, newcut.right, OL, can)
-                                                                        E=newbt.first(newcut.left, newcut.right, OL, number)
-                                                                        print("Follow 5")
-                                                        else:
-                                                                print("Follow 6")
-                                                                newbt.follow(newcut.left, newcut.right, OL, number)
+						else:
+                                        	        print("Follow 2")
+                                                        if can != cn and newcut.left !=newcut.right:
+	                                                	newbt.first(newcut.left, newcut.right[s:], can, OL, number)
+					elif newcut.right[s] in T4:
+                                	        print("Follow 3")
+                                        	Table[UT.index(OL)][T4.index(newcut.right[len(newcut.right)-1])]=number
+						
 
 UT=[]
 T1=set()
@@ -175,7 +156,7 @@ for rule in RULES[1:]:
 	cut=CUT(RULES,rule)
 	bt=BT(cut.left, cut.right, cut.number, cut.left, cut.number)
 	bt.first(cut.left, cut.right, cut.number, cut.left, cut.number)
-	#bt.follow(cut.left, cut.right, cut.left, cut.number)
+        bt.follow(cut.left, cut.number, cut.left, cut.number)
 
 print("\nAfter First:")
 print(T4)
