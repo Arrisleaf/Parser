@@ -1,5 +1,7 @@
 import sys
 import numpy 
+CFG="cfg.txt"
+INPUT="input string.txt"
 
 class CUT:
 	def __init__(self, RULES, rule):
@@ -91,6 +93,7 @@ class Apply:
 		self.string=string.reverse()
 		
 	def compare(self, stack, remain):
+		print("MARK",stack[-1],remain[-1])
 		r=Table[UT.index(stack[-1])][T4.index(remain[-1])]
 		if r!=0:
 			print(stack,remain)
@@ -107,12 +110,28 @@ class Apply:
 				stack.pop()
 				remain.pop()
 				if len(stack)==0 and len(remain)==0:
-					print("Correct!!!!\n")
+					print("Legal.\n")
 					return
+				elif len(remain)==0 and len(stack)>0 :
+					derivetest=stack
+					#print(LUT)
+					for l in range(len(derivetest)-1,-1,-1):
+						if derivetest[l] in UT:
+							if LUT[UT.index(derivetest[l])]==1:
+								derivetest.pop()
+					if len(derivetest)==0:
+						print("Legal(2).\n")
+						return
+					else:
+						print("Failed... May be illegal or ambiguous.\n")
+                                        	return
+						
 				elif len(stack)==0 or len(remain)==0: 
-					print("Fail... May be illegal.\n")
+					print("Failed...(2) May be illegal or ambiguous.\n")
 					return
-			self.compare(stack,string)				
+			self.compare(stack,string)
+		else:
+			print("Can not find an appropriate rule to apply.\nFailed.\n")				
 
 UT=[]
 T1=set()
@@ -122,7 +141,7 @@ T4=[]
 RULES=["Syntax Error"]
 
 #Record UT,T1,RULES
-for line in open('cfg.txt','r'):
+for line in open(CFG,'r'):
 	print(line)
 	while("->" in line):
 		#RULES
@@ -143,7 +162,7 @@ for line in open('cfg.txt','r'):
 		RULES.append(LEFT+" "+line)
 		#T1
                 line=line.split(" ")
-                for remain in line[1::-2]:
+                for remain in line[1:]:
                         T1.add(remain)
                 break
 
@@ -161,7 +180,8 @@ print("RULES:")
 print(RULES[1:])
 
 T3=T2
-T3.remove("lambda")
+if "lambda" in T3:
+	T3.remove("lambda")
 T3=list(T3)
 #print("No lambda Terminal(T3):")
 #print(T3)
@@ -190,7 +210,7 @@ print("\nLL(1) Table:")
 print(T4)
 print(Table)
 
-for line in open('input string.txt','r'):
+for line in open(INPUT,'r'):
         print("\nInput string:\n%s\n"%line)
 	stack=[]
 	stack.append(UT[0])
