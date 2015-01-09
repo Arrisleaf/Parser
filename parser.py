@@ -82,7 +82,35 @@ class BT:
 					elif newcut.right[s] in T4:
                                 	        print("Follow 3")
                                         	Table[UT.index(OL)][T4.index(newcut.right[len(newcut.right)-1])]=number
-						
+
+class Apply:
+	def __init__(self, start, string):
+		self.start=start.reverse()
+		self.string=string.reverse()
+		
+	def compare(self, stack, remain):
+		r=Table[UT.index(stack[-1])][T4.index(remain[-1])]
+		if r!=0:
+			print(stack,remain)
+			print("Apply Rule",r,RULES[r])
+			cut=CUT(RULES,RULES[r])
+			cut.right.reverse()
+			if "lambda" in cut.right:
+				cut.right=[]
+			stack.pop()
+			stack.extend(cut.right)
+			print(stack,remain)
+			while(stack[-1]==remain[-1]):
+				print("Match",stack[-1])
+				stack.pop()
+				remain.pop()
+				if len(stack)==0 and len(remain)==0:
+					print("Correct!!!!")
+					return
+				elif len(stack)==0 or len(remain)==0: 
+					print("Fail... May be illegal.")
+					return
+			self.compare(stack,string)				
 
 UT=[]
 T1=set()
@@ -122,28 +150,28 @@ for line in open('cfg.txt','r'):
 print("Unterminal:")
 print(UT)
 
-print("\nT1:")
-print(T1)
+#print("T1:")
+#print(T1)
 
 T2=T1.difference(UT)
 
-print("\nTerminal(T2):")
-print(T2)
-print("\nRULES:")
+#print("Terminal(T2):")
+#print(T2)
+print("RULES:")
 print(RULES[1:])
 
 T3=T2
 T3.remove("lambda")
 T3=list(T3)
-print("\nNo lambda Terminal(T3):")
-print(T3)
+#print("No lambda Terminal(T3):")
+#print(T3)
 
 T4=sorted(T3)
-print("\nSorted Terminal(T4):")
+print("Sorted Terminal(T4):")
 print(T4)
 
 Table=numpy.zeros((len(UT),len(T4)),int)
-print("\nTable:")
+print("Table:")
 print(Table)
 
 LR=[0]*len(RULES)
@@ -158,6 +186,15 @@ for rule in RULES[1:]:
 	bt.first(cut.left, cut.right, cut.number, cut.left, cut.number)
         bt.follow(cut.left, cut.number, cut.left, cut.number)
 
-print("\nAfter First:")
+print("\nLL(1) Table:")
 print(T4)
 print(Table)
+
+for line in open('input string.txt','r'):
+        print(line)
+	stack=[]
+	stack.append(UT[0])
+	string=line.split(" ")
+	print(string)
+	app=Apply(stack, string)
+	app.compare(stack, string)
