@@ -75,7 +75,7 @@ class BT:
 			print("\tCompleting Follow Set...")
 			if newcut.right[-1]==left :
 				print(left,cn,can,OL,number)
-				print("GET")
+				#print("GET")
 				passby.add(cn)
                        		tp=findLEFT(newcut.left)
 	               		for newcan in tp.candidate:
@@ -85,16 +85,16 @@ class BT:
 				for s in range(newcut.right.index(left),len(newcut.right)-1):
 					if newcut.right[s+1] in UT :
 						if LUT[UT.index(newcut.right[s+1])]==1 :
-							print("Follow 1")
+							#print("Follow 1")
 							newbt.first(newcut.left, newcut.right[s+1:], can, OL, number, passby)
 							newbt.follow(newcut.left, can, OL, number, passby)
 							return		
 						else:
-                      			        	print("Follow 2")
+                      			        	#print("Follow 2")
                                        		      	newbt.first(newcut.left, newcut.right[s+1:], can, OL, number, passby)
 							return
 					elif newcut.right[s+1] in T4:
-                       	        		print("Follow 3",newcut.right[s+1])
+                       	        		#print("Follow 3",newcut.right[s+1])
                                			Table[UT.index(OL)][T4.index(newcut.right[s+1])]=number
 						return
 
@@ -197,7 +197,7 @@ T3=list(T3)
 #print(T3)
 
 T4=sorted(T3)
-print("Sorted Terminal(T4):")
+print("\nSorted Terminal(T4):")
 print(T4)
 
 Table=numpy.zeros((len(UT),len(T4)),int)
