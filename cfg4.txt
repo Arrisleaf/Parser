@@ -1,0 +1,10 @@
+S -> A B C D E
+A -> a
+| lambda
+B -> b
+| lambda
+C -> c
+D -> d
+| lambda
+E -> e
+| lambda
