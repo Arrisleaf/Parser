@@ -14,7 +14,8 @@ class findRULES:
 	def __init__(self, left):
 		self.candidate=[]
 		for rule in RULES[1:]:
-	        	if left == rule[0]:
+			cut=CUT(RULES,rule)
+	        	if left == cut.left:
 				self.candidate.append(RULES.index(rule))
 
 class findRIGHT:
@@ -43,16 +44,21 @@ class BT:
 					print("\tWriting Table.")
 					print("left",left,"current no.",cn,"Origin LEFT:", OL, "ITEM", item,"NO.",number)
 					Table[UT.index(OL)][T4.index(item)]=number
-				return
+					print(LR[1:])
+					return
 			elif(item == "lambda"):
 				LUT[UT.index(left)]=1
 				LR[cn]=1
 			elif(item in UT):
+				print("ITEM",item)
 				tmp=findRULES(item)
+				print(tmp.candidate)
 				for can in tmp.candidate:
+					print("????",can)
 			       		newcut=CUT(RULES,RULES[can])
 					newbt=BT(newcut.left, newcut.right, can, OL, number)
-					newbt.first(newcut.left, newcut.right, can, OL, number) 			
+					if(cn !=can):
+						newbt.first(newcut.left, newcut.right, can, OL, number)
 			else:
 				print("The input string does not match any token.\n")
 		if L==1 and left not in right :
@@ -66,25 +72,28 @@ class BT:
 				newbt=BT(newcut.left, newcut.right, can, OL, number)
 				print("\tCompleting Follow Set...")
 				print("left:",left,"can:",can,"NO.",number,"R",newcut.right)
-				#print(LR[1:])
-				if newcut.right[len(newcut.right)-1]==left:
-					#print("GET")
+				print(LR[1:])
+				if newcut.right[-1]==left and LUT[UT.index(left)]==1:
+					print("GET")
+                                        print(newcut.left, can, OL, number)
 					newbt.follow(newcut.left, can, OL, number)
-				for s in range(newcut.right.index(left),len(newcut.right)):
-					#print("S:",s,"NOW",newcut.right[s],"INDEX",newcut.right.index(left))
-					if newcut.right[s] in UT and newcut.right[s] != left:
+				elif newcut.right[-1]=="lambda":
+					print("GET2")
+					newbt.follow(newcut.left, can, OL, number)
+				for s in range(newcut.right.index(left),len(newcut.right)-1):
+					print("S+1:",s+1,"NOW",newcut.right[s+1],"INDEX",newcut.right.index(left))
+					if newcut.right[s+1] in UT :
 						if LR[can]==1 :
-							#print("Follow 1")
-							newbt.first(newcut.left, newcut.right[s:], can, OL, number)
-							if can != cn:
-								newbt.follow(newcut.left, can, OL, number)
+							print("Follow 1")
+							newbt.first(newcut.left, newcut.right[s+1:], can, OL, number)
+							newbt.follow(newcut.left, can, OL, number)
 							
 						else:
-                                        	        #print("Follow 2")
+                                        	        print("Follow 2")
                                                         if can != cn and newcut.left !=newcut.right:
-	                                                	newbt.first(newcut.left, newcut.right[s:], can, OL, number)
-					elif newcut.right[s] in T4:
-                                	        #print("Follow 3")
+	                                                	newbt.first(newcut.left, newcut.right[s+1:], can, OL, number)
+					elif newcut.right[s+1] in T4:
+                                	        print("Follow 3")
                                         	Table[UT.index(OL)][T4.index(newcut.right[len(newcut.right)-1])]=number
 
 class Apply:
@@ -93,7 +102,6 @@ class Apply:
 		self.string=string.reverse()
 		
 	def compare(self, stack, remain):
-		print("MARK",stack[-1],remain[-1])
 		r=Table[UT.index(stack[-1])][T4.index(remain[-1])]
 		if r!=0:
 			print(stack,remain)
