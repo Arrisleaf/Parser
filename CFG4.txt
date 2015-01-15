@@ -1,0 +1,7 @@
+Start -> Value $
+Value -> num
+| lparen Expr rparen
+Expr -> plus Value Value
+| prod Values
+Values -> Value Values
+| lambda

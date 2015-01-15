@@ -1,4 +1,4 @@
-S -> A B B A
+S -> A B c
 A -> a
 | lambda
 B -> b

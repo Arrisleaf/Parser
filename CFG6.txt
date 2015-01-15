@@ -1,0 +1,5 @@
+Program -> begin Stmts end $
+Stmts -> Stmt ; Stmts
+| lambda
+Stmt -> simplestmt
+| begin Stmts end
