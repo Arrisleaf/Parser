@@ -2,6 +2,7 @@ import sys
 import numpy 
 CFG="CFG8.txt"
 INPUT="input string.txt"
+passby=set()
 
 class CUT:
 	def __init__(self, RULES, rule):
@@ -10,7 +11,7 @@ class CUT:
         	self.left=rule[0]
         	self.right=rule[2:]
 
-class findRULES:
+class findLEFT:
 	def __init__(self, left):
 		self.candidate=[]
 		for rule in RULES[1:]:
@@ -34,7 +35,7 @@ class BT:
         	self.ol=OL
 		self.cn=cn
 
-	def first(self, left, right, cn, OL, number):
+	def first(self, left, right, cn, OL, number, passby):
 		L=1
 		for item in right:
 			if item in UT:
@@ -42,59 +43,60 @@ class BT:
 			if(item in T4):
 				if Table[UT.index(OL)][T4.index(item)]==0:
 					print("\tWriting Table.")
-					print("left",left,"current no.",cn,"Origin LEFT:", OL, "ITEM", item,"NO.",number)
+					print("left:",left,"CN:",cn,"ITEM:",item,"OL:",OL,"NO.",number)
 					Table[UT.index(OL)][T4.index(item)]=number
 					print(LR[1:])
-					return
+				return
 			elif(item == "lambda"):
 				LUT[UT.index(left)]=1
 				LR[cn]=1
 			elif(item in UT):
-				print("ITEM",item)
-				tmp=findRULES(item)
-				print(tmp.candidate)
+				tmp=findLEFT(item)
 				for can in tmp.candidate:
-					print("????",can)
 			       		newcut=CUT(RULES,RULES[can])
 					newbt=BT(newcut.left, newcut.right, can, OL, number)
-					if(cn !=can):
-						newbt.first(newcut.left, newcut.right, can, OL, number)
+					if(can not in passby):
+						passby.add(can)
+						newbt.first(newcut.left, newcut.right, can, OL, number, passby)
 			else:
 				print("The input string does not match any token.\n")
 		if L==1 and left not in right :
 			LR[cn]=1
 
-	def follow(self, left, cn, OL, number):
-		if LR[cn]==1:
-			tmp=findRIGHT(left)
-			for can in tmp.candidate:
-	                        newcut=CUT(RULES,RULES[can])
-				newbt=BT(newcut.left, newcut.right, can, OL, number)
-				print("\tCompleting Follow Set...")
-				print("left:",left,"can:",can,"NO.",number,"R",newcut.right)
-				print(LR[1:])
-				if newcut.right[-1]==left and LUT[UT.index(left)]==1:
-					print("GET")
-                                        print(newcut.left, can, OL, number)
-					newbt.follow(newcut.left, can, OL, number)
-				elif newcut.right[-1]=="lambda":
-					print("GET2")
-					newbt.follow(newcut.left, can, OL, number)
+	def follow(self, left, cn, OL, number, passby):
+		if cn in passby:
+			print("Already traced.")
+			passby=set()
+			return
+		tmp=findRIGHT(left)
+		for can in tmp.candidate:
+			newcut=CUT(RULES,RULES[can])
+			newbt=BT(newcut.left, newcut.right, can, OL, number)
+			print("\tCompleting Follow Set...")
+			if newcut.right[-1]==left :
+				print(left,cn,can,OL,number)
+				#print("GET")
+				passby.add(cn)
+                       		tp=findLEFT(newcut.left)
+	               		for newcan in tp.candidate:
+	        	        	nc=CUT(RULES,RULES[newcan])
+                                	newbt.follow(nc.left, newcan, OL, number, passby)
+			else:
 				for s in range(newcut.right.index(left),len(newcut.right)-1):
-					print("S+1:",s+1,"NOW",newcut.right[s+1],"INDEX",newcut.right.index(left))
 					if newcut.right[s+1] in UT :
-						if LR[can]==1 :
-							print("Follow 1")
-							newbt.first(newcut.left, newcut.right[s+1:], can, OL, number)
-							newbt.follow(newcut.left, can, OL, number)
-							
+						if LUT[UT.index(newcut.right[s+1])]==1 :
+							#print("Follow 1")
+							newbt.first(newcut.left, newcut.right[s+1:], can, OL, number, passby)
+							newbt.follow(newcut.left, can, OL, number, passby)
+							return		
 						else:
-                                        	        print("Follow 2")
-                                                        if can != cn and newcut.left !=newcut.right:
-	                                                	newbt.first(newcut.left, newcut.right[s+1:], can, OL, number)
+                      			        	#print("Follow 2")
+                                       		      	newbt.first(newcut.left, newcut.right[s+1:], can, OL, number, passby)
+							return
 					elif newcut.right[s+1] in T4:
-                                	        print("Follow 3")
-                                        	Table[UT.index(OL)][T4.index(newcut.right[len(newcut.right)-1])]=number
+                       	        		#print("Follow 3",newcut.right[s+1])
+                               			Table[UT.index(OL)][T4.index(newcut.right[s+1])]=number
+						return
 
 class Apply:
 	def __init__(self, start, string):
@@ -120,12 +122,37 @@ class Apply:
 				if len(stack)==0 and len(remain)==0:
 					print("Legal.\n")
 					return
+				elif len(remain)==1 and remain[0]=="$":
+                                        derivetest=stack
+                                        #print(LUT)
+                                        for l in range(len(derivetest)-1,-1,-1):
+                                                if derivetest[l] in UT:
+                                                        if LUT[UT.index(derivetest[l])]==1:
+								tmp=findRIGHT("lambda")
+								for can in tmp.candidate:
+									newcut=CUT(RULES,RULES[can])
+									if newcut.left==derivetest[l]:
+										dap=can
+										print("Apply Rule",dap,RULES[dap])
+                                                                derivetest.pop()
+                                        if len(derivetest)==1 and derivetest[0]=="$":
+                                                print("Legal(3).\n")
+                                                return
+                                        else:
+                                                print("Failed(3)... May be illegal or ambiguous.\n")
+                                                return
 				elif len(remain)==0 and len(stack)>0 :
 					derivetest=stack
 					#print(LUT)
 					for l in range(len(derivetest)-1,-1,-1):
 						if derivetest[l] in UT:
 							if LUT[UT.index(derivetest[l])]==1:
+								tmp=findRIGHT("lambda")
+								for can in tmp.candidate:
+									newcut=CUT(RULES,RULES[can])
+									if newcut.left==derivetest[l]:
+										dap=can
+										print("Apply Rule",dap,RULES[dap])
 								derivetest.pop()
 					if len(derivetest)==0:
 						print("Legal(2).\n")
@@ -195,7 +222,7 @@ T3=list(T3)
 #print(T3)
 
 T4=sorted(T3)
-print("Sorted Terminal(T4):")
+print("\nSorted Terminal(T4):")
 print(T4)
 
 Table=numpy.zeros((len(UT),len(T4)),int)
@@ -211,8 +238,12 @@ for rule in RULES[1:]:
 	cut=CUT(RULES,rule)
 	print("\nChecking rule %d:\n\tCompleting First Set..."%(cut.number))
 	bt=BT(cut.left, cut.right, cut.number, cut.left, cut.number)
-	bt.first(cut.left, cut.right, cut.number, cut.left, cut.number)
-        bt.follow(cut.left, cut.number, cut.left, cut.number)
+	passby=set()
+	passby.add(cut.number)
+	bt.first(cut.left, cut.right, cut.number, cut.left, cut.number, passby)
+	passby=set()
+	if LR[RULES.index(rule)]==1:
+	        bt.follow(cut.left, cut.number, cut.left, cut.number, passby)
 
 print("\nLL(1) Table:")
 print(T4)
